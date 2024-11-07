@@ -1,10 +1,24 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 import plotly.graph_objects as go
 import pandas as pd
 import yfinance as yf
-from fastapi import FastAPI
+from plotly.io import to_json
+from fastapi.responses import JSONResponse
 
-# 畫圖
-def graph_cg(symbol, df):
+app = FastAPI()
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # Adjust to your frontend's URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Function to generate candlestick chart data as JSON
+def graph_cg_json(symbol, df):
     fig = go.Figure(data=[go.Candlestick(
         x=df.index,
         open=df[('Open', symbol)],
@@ -21,24 +35,11 @@ def graph_cg(symbol, df):
         template='plotly_white',
         showlegend=True
     )
-    fig.show()
+    return to_json(fig)
 
-# 畫線方式一
-def method1(symbol,df):
-    pass
-
-# 統一數據
-def handle_data(df):
-    pass
-
-
-app = FastAPI()
-# fastapi run main.py
+# Endpoint for fetching stock data and graph JSON
 @app.get("/{symbol}")
-async def read_root(symbol: str):
+async def get_stock_data(symbol: str):
     df = yf.download(symbol, start="2023-01-01", end="2024-12-31")
-    graph_cg(symbol, df)
-    return {"Message": f"Graph generated for {symbol}"}
-
-
-
+    fig_json = graph_cg_json(symbol, df)
+    return JSONResponse(content=fig_json)

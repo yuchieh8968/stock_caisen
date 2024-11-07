@@ -114,8 +114,9 @@ function App() {
               <ChartTypeSelector value={chartType} onValueChange={setChartType} />
               <DateRangePicker dateRange={dateRange} onDateRangeChange={setDateRange} />
             </div>
+
             {chartType === 'line' ? (
-              <StockChart data={mockDetails.chartData} isPositive={mockDetails.change > 0} />
+              <StockChart symbol="AAPL" /> 
             ) : (
               <CandlestickChart data={mockCandlestickData} />
             )}

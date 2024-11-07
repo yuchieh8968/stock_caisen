@@ -1,74 +1,36 @@
-import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { Card } from './ui/card';
-import type { ChartData } from '@/lib/types';
+import React, { useEffect, useState } from "react";
+import Plot from 'plotly.js-basic-dist';
 
 interface StockChartProps {
-  data: ChartData[];
-  isPositive: boolean;
+  symbol: string;
 }
 
-export function StockChart({ data, isPositive }: StockChartProps) {
-  return (
-    <Card className="p-4 h-[400px]">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data}>
-          <XAxis
-            dataKey="timestamp"
-            stroke="#888888"
-            fontSize={12}
-            tickLine={false}
-            axisLine={false}
-          />
-          <YAxis
-            stroke="#888888"
-            fontSize={12}
-            tickLine={false}
-            axisLine={false}
-            tickFormatter={(value) => `$${value}`}
-          />
-          <Tooltip
-            content={({ active, payload }) => {
-              if (active && payload && payload.length) {
-                return (
-                  <div className="rounded-lg border bg-background p-2 shadow-sm">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="flex flex-col">
-                        <span className="text-[0.70rem] uppercase text-muted-foreground">
-                          Price
-                        </span>
-                        <span className="font-bold text-muted-foreground">
-                          ${payload[0].value}
-                        </span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[0.70rem] uppercase text-muted-foreground">
-                          Time
-                        </span>
-                        <span className="font-bold text-muted-foreground">
-                          {payload[0].payload.timestamp}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-              return null;
-            }}
-          />
-          <Line
-            type="monotone"
-            dataKey="value"
-            strokeWidth={2}
-            activeDot={{
-              r: 6,
-              style: { fill: isPositive ? 'hsl(var(--chart-2))' : 'hsl(var(--destructive))' },
-            }}
-            style={{
-              stroke: isPositive ? 'hsl(var(--chart-2))' : 'hsl(var(--destructive))',
-            }}
-          />
-        </LineChart>
-      </ResponsiveContainer>
-    </Card>
-  );
-}
+export const StockChart: React.FC<StockChartProps> = ({ symbol }) => {
+  const [chartData, setChartData] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Fetch the chart data from the API
+    const fetchChartData = async () => {
+      try {
+        const response = await fetch(`http://localhost:8000/${symbol}`);
+        const data = await response.json();
+        setChartData(data); // Store chart JSON data in state
+      } catch (error) {
+        console.error("Error fetching chart data:", error);
+      }
+    };
+
+    fetchChartData();
+  }, [symbol]);
+
+  useEffect(() => {
+    if (chartData) {
+      const parsedData = JSON.parse(chartData); // Parse the JSON data
+      Plot.newPlot("plotly-chart", parsedData.data, parsedData.layout);
+    }
+  }, [chartData]);
+
+  return <div id="plotly-chart" style={{ width: "100%", height: "400px" }} />;
+};
+
+export default StockChart;
