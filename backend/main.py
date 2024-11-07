@@ -11,7 +11,7 @@ def graph_cg(symbol, df):
         high=df[('High', symbol)],
         low=df[('Low', symbol)],
         close=df[('Close', symbol)],
-        name=symbol
+        name=symbol 
     )])
 
     fig.update_layout(
